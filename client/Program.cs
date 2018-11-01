@@ -6,24 +6,34 @@ namespace client
 {
     class Program
     {
-        static ConnectionMultiplexer RedisClient = ConnectionMultiplexer.Connect("localhost:6378");
-        static IDatabase RedisDB;
+        private const string uri = "localhost:6378";
+        static ConnectionMultiplexer connection = null;
+        static IDatabase redisDb;
+        static bool isConnected = false;
         static void Main(string[] args)
         {
-	    while(true)
-	    {
-		Thread.Sleep(200);
-		try
-		{
-	           var RedisDB = RedisClient.GetDatabase();
-		    var value = RedisDB.StringGet("g");
-	     	    Console.Write(value);
-		}
-		catch(Exception exc)
-		{
-			continue;
-		}
-	    }
+            while(true)
+            {
+                Thread.Sleep(200);
+                try
+                {
+                    if(!isConnected)
+                    {
+                        Console.WriteLine("connecting");
+                        connection = ConnectionMultiplexer.Connect(uri);
+                        isConnected = true;
+                    }
+                    var redisDb = connection.GetDatabase();
+                    var value = redisDb.StringGet("g");
+                    Console.Write(value);
+                }
+                catch(Exception exc)
+                {
+                    Console.WriteLine(exc);
+                    isConnected = false;
+                    continue;
+                }
+            }
         }
     }
 }
